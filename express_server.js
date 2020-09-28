@@ -31,17 +31,19 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   let newShortURL = generateRandomString();
   urlDatabase[newShortURL] = req.body.longURL;
-  console.log(urlDatabase);
-
-  res.render("urls_show", { shortURL: newShortURL, longURL: urlDatabase[newShortURL]});
+  res.redirect(`/urls/${newShortURL}`);
 })
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]}
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
-
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  console.log(longURL);
+  res.redirect(longURL);
+});
 
 app.get("/hello", (req, res) => {
   const templateVars = { greeting: 'Hello World!' };
