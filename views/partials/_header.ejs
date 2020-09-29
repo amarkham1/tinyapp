@@ -7,7 +7,9 @@
     <div class="collapse navbar-collapse text-nowrap" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
+        <% if(user) { %>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        <% } %>
       </div>
       <div class="navbar-nav container d-flex justify-content-end">
         <% if(user) { %>

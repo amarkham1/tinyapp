@@ -50,7 +50,12 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: users[req.cookies["user_id"] ]};
+  const user = users[req.cookies["user_id"]];
+  if (!user) {
+    res.redirect("/login");
+    return ;
+  }
+  const templateVars = { user };
   res.render("urls_new", templateVars);
 });
 
