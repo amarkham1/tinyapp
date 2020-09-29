@@ -8,10 +8,6 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
-function generateRandomString() {
-  return Math.random().toString(36).substring(2,8);
-}
-
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -27,6 +23,18 @@ const users = {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
+  }
+}
+
+function generateRandomString() {
+  return Math.random().toString(36).substring(2,8);
+}
+
+const getUser = email => {
+  for (const user in users) {
+    if (users[user].email === email) {
+      return user;
+    }
   }
 }
 
@@ -74,7 +82,7 @@ app.post("/login", (req, res) => {
 })
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
@@ -84,6 +92,16 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  if (!req.body.email || !req.body.password) {
+    res.redirect(400, "/register");
+    return ;
+  }
+
+  if (getUser(req.body.email)) {
+    res.redirect(400, "/register");
+    return ;
+  }
+  console.log(getUser(req.body.email));
   const id = generateRandomString();
   users[id] = { 
     id,
