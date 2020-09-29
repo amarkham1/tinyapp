@@ -33,7 +33,7 @@ function generateRandomString() {
 const getUser = email => {
   for (const user in users) {
     if (users[user].email === email) {
-      return user;
+      return users[user];
     }
   }
 }
@@ -82,7 +82,12 @@ app.get("/login", (req, res) => {
 })
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
+  const user = getUser(req.body.email);
+  if (!user || user.password !== req.body.password) {
+    res.redirect(400, "/login");
+    return ;
+  }
+  res.cookie("user_id", user.id);
   res.redirect("/urls");
 })
 
