@@ -15,13 +15,27 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-app.get("/", (req, res) => {
-  res.send("Hello");
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls/");
+});
+
+app.post("/urls/:shortURL", (req, res) => {
+  console.log(req.body);
+  urlDatabase[req.body.shortURL] = req.body.longURL;
+  const templateVars = { shortURL: req.body.shortURL, longURL: urlDatabase[req.body.shortURL]};
+  res.render("urls_show", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
+
+app.get("/urls/:shortURL", (req, res) => {
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  res.render("urls_show", templateVars);
+});
+
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -34,16 +48,14 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${newShortURL}`);
 })
 
-app.get("/urls/:shortURL", (req, res) => {
-  console.log(req.statusCode);
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
-  res.render("urls_show", templateVars);
+app.get("/u/:shortURL", (req, res) => {
+  console.log('hi',req.params);
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
 });
 
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  console.log(longURL);
-  res.redirect(longURL);
+app.get("/", (req, res) => {
+  res.send("Hello");
 });
 
 app.listen(PORT, () => {
