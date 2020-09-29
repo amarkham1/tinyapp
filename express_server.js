@@ -84,7 +84,7 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const user = getUser(req.body.email);
   if (!user || user.password !== req.body.password) {
-    res.redirect(400, "/login");
+    res.redirect(403, "/login");
     return ;
   }
   res.cookie("user_id", user.id);
