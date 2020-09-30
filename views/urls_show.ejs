@@ -16,7 +16,7 @@
       </div>
       <div class="card-body border-top bg-light">
         <h3>Edit</h3>
-        <form class="form-inline" action="/urls/<%= shortURL %>" method="POST">
+        <form class="form-inline d-flex justify-content-center" action="/urls/<%= shortURL %>" method="POST">
           <div class="form-group mb-2">
             <label for="longURL">New URL:</label>
             <input type="hidden" name="shortURL", value=<%= shortURL %>>

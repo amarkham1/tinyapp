@@ -38,7 +38,21 @@ const getUser = email => {
   }
 }
 
+const urlsForUser = userID => {
+  let result = {};
+  for (const [record, data] of Object.entries(urlDatabase)) {
+    if (data.userID === userID) {
+      result[record] = data;
+    }
+  }
+  return result;
+}
+
 app.post("/urls/:shortURL/delete", (req, res) => {
+  if (req.cookies["user_id"] !== urlDatabase[req.params.shortURL].userID) {
+    res.redirect(403, "/");
+    return ;
+  }
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls/");
 });
@@ -64,13 +78,18 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  if (req.cookies["user_id"] !== urlDatabase[req.params.shortURL].userID) {
+    res.redirect(403, "/");
+    return ;
+  }
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.cookies["user_id"]]};
   res.render("urls_show", templateVars);
 });
 
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: users[req.cookies["user_id"]]};
+  const userURLs = urlsForUser(req.cookies["user_id"]);
+  const templateVars = { urls: userURLs, user: users[req.cookies["user_id"]]};
   res.render("urls_index", templateVars);
 });
 
@@ -133,8 +152,22 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+/* app.get("/error", (req, res) => {
+  const templateVars = { 
+    code: req.body.errorCode,
+    message: req.body.errorMessage,
+    redirect: req.body.redirectURL,
+    redirectName: req.body.redirectName
+  };
+  res.render("urls_error", templateVars);
+}) */
+
 app.get("/", (req, res) => {
-  res.send("Hello");
+  if (req.cookies["user_id"]) {
+    res.redirect("/urls");
+    return ;
+  }
+  res.redirect("/login");
 });
 
 app.listen(PORT, () => {
