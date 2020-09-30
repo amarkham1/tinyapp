@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
-const { generateRandomString, getUserByEmail, urlsForUser } = require('./helpers');
+const { generateRandomString, getUserByEmail, urlsForUser, getValidURL } = require('./helpers');
 
 const app = express();
 const PORT = 8080;
@@ -35,20 +35,28 @@ const usersDatabase = {
 
 // GET / POST methods
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
+  if (!req.session.user_id || req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.redirect(403, "/");
     return ;
   }
+
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls/");
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.body.shortURL] = {
-    longURL: req.body.longURL,
-    userID: req.session.user_id
+  if (!req.session.user_id || req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
+    res.redirect(403, "/");
+    return ;
   }
 
+  if (!req.body.longURL) {
+    res.redirect(400, `/urls/${req.params.shortURL}`);
+    return ;
+  }
+
+  const longURL = getValidURL(req.body.longURL);
+  urlDatabase[req.body.shortURL].longURL = longURL;
   const templateVars = { shortURL: req.body.shortURL, longURL: urlDatabase[req.body.shortURL].longURL, user: usersDatabase[req.session.usd_id]};
   res.render("urls_show", templateVars);
 });
@@ -64,10 +72,21 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  if(!urlDatabase[req.params.shortURL]) {
+    res.redirect(400, "/urls");
+    return ;
+  }
+
+  if (!req.session.user_id) {
+    res.redirect(403, "/login");
+    return ;
+  } 
+  
   if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.redirect(403, "/urls");
     return ;
   }
+
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: usersDatabase[req.session.usd_id]};
   res.render("urls_show", templateVars);
 });
@@ -80,21 +99,38 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  if (!req.session.user_id) {
+    res.redirect(403, "/login");
+    return ;
+  }
+
   let newShortURL = generateRandomString();
   urlDatabase[newShortURL] = {
-    longURL: req.body.longURL,
-    userID: req.session.user_id
+    longURL: getValidURL(req.body.longURL),
+    userID: req.session.user_id,
+    date: new Date(),
+    visits: 0,
+    visitorIPs: []
   };
   res.redirect(`/urls/${newShortURL}`);
 })
 
 app.get("/u/:shortURL", (req, res) => {
+  if (!req.session.user_id) {
+    res.redirect(403, "/login");
+    return ;
+  }
+
+  if(!urlDatabase[req.params.shortURL]) {
+    res.redirect(400, "/");
+    return ;
+  }
+
   const visitorIPs = urlDatabase[req.params.shortURL].visitorIPs;
   if (visitorIPs.indexOf(req.connection.remoteAddress) < 0) {
     visitorIPs.push(req.connection.remoteAddress);
   }
   urlDatabase[req.params.shortURL].visits++;
-  console.log(urlDatabase);
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
@@ -118,24 +154,23 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session.user_id = null;
-  res.redirect("/login");
+  res.redirect("/urls");
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { user: usersDatabase[req.session.user_id] };
-  res.render("urls_register", templateVars);
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  }
+
+  res.render("urls_register", { user: null });
 });
 
 app.post("/register", (req, res) => {
-  if (!req.body.email || !req.body.password) {
+  if (!req.body.email || !req.body.password || getUserByEmail(usersDatabase, req.body.email)) {
     res.redirect(400, "/register");
     return ;
   }
 
-  if (getUserByEmail(usersDatabase, req.body.email)) {
-    res.redirect(400, "/register");
-    return ;
-  }
   const id = generateRandomString();
   usersDatabase[id] = { id, email: req.body.email, password: bcrypt.hashSync(req.body.password, salt) };
   req.session.user_id = id;

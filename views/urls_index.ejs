@@ -9,7 +9,7 @@
   <%- include('partials/_header') %>
   <main style="margin: 1em;">
     <% if(user) { %>
-      <h3>My URLs</h3>
+      <h3 class="ml-4 mb-3">My URLs</h3>
       <table class="table">
         <thead>
           <tr>
@@ -26,8 +26,8 @@
           <% for (let url in urls) { %>
             <tr>
               <td><%= url %></td>
-              <td><%= urls[url].longURL %></td>
-              <td><%= urls[url].date %></td>
+              <td><a href="/u/<%= url %>"><%= urls[url].longURL %></a></td>
+              <td><%= urls[url].date.toDateString() %></td>
               <td><%= urls[url].visits %></td>
               <td><%= urls[url].visitorIPs.length %></td>
               <td>

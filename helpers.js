@@ -20,4 +20,17 @@ const urlsForUser = (urlDB, userID) => {
   return result;
 }
 
-module.exports = { generateRandomString, getUserByEmail, urlsForUser };
+const getValidURL = url => {
+  let newUrl = url.trim().replace(/\s/g, "");
+
+  if(/^(:\/\/)/.test(newUrl)){
+    return `http${newUrl}`;
+  }
+  if(!/^(f|ht)tps?:\/\//i.test(newUrl)){
+    return `http://${newUrl}`;
+  }
+
+  return newUrl;
+};
+
+module.exports = { generateRandomString, getUserByEmail, urlsForUser, getValidURL };
