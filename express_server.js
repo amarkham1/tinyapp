@@ -8,6 +8,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
+// "database"
 const urlDatabase = {
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID" },
   "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID" }
@@ -26,6 +27,7 @@ const users = {
   }
 }
 
+// helper functions
 function generateRandomString() {
   return Math.random().toString(36).substring(2,8);
 }
@@ -48,6 +50,7 @@ const urlsForUser = userID => {
   return result;
 }
 
+// GET / POST methods
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.cookies["user_id"] !== urlDatabase[req.params.shortURL].userID) {
     res.redirect(403, "/");
@@ -143,28 +146,14 @@ app.post("/register", (req, res) => {
     return ;
   }
   const id = generateRandomString();
-  users[id] = { 
-    id,
-    email: req.body.email,
-    password: req.body.password
-  };
+  users[id] = { id, email: req.body.email, password: req.body.password };
   res.cookie("user_id", id);
   res.redirect("/urls");
 });
 
-/* app.get("/error", (req, res) => {
-  const templateVars = { 
-    code: req.body.errorCode,
-    message: req.body.errorMessage,
-    redirect: req.body.redirectURL,
-    redirectName: req.body.redirectName
-  };
-  res.render("urls_error", templateVars);
-}) */
-
 app.get("/", (req, res) => {
   if (req.cookies["user_id"]) {
-    res.redirect("/urls");
+    res.redirect(200, "/urls");
     return ;
   }
   res.redirect("/login");
