@@ -52,3 +52,13 @@ describe('urlsForUser', function() {
     assert.deepEqual(urls, expectedOutput);
   });
 });
+
+describe('getValidURL', function() {
+  it('should add http:// when provided url doesnt have one', function() {
+    assert.strictEqual(getValidURL('www.test.com'),'http://www.test.com');
+  });
+
+  it('should remove white space', function() {
+    assert.strictEqual(getValidURL('  http  :  /  / www.test.com '),'http://www.test.com');
+  });
+});
