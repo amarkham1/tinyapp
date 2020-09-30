@@ -2,7 +2,7 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2,8);
 }
 
-const getUserByEmail = (userDB, email) => {
+const getUserByEmail = (email, userDB) => {
   for (const user in userDB) {
     if (userDB[user].email === email) {
       return userDB[user];
