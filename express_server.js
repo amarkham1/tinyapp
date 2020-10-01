@@ -3,7 +3,16 @@ const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const { urlDB, usersDB } = require('./db');
-const { generateRandomString, getUserByEmail, urlsForUser, getValidURL, getVisitorIP } = require('./helpers');
+const {
+  generateRandomString,
+  getUserByEmail,
+  urlsForUser,
+  getValidURL,
+  getVisitorIP,
+  getUserIDOfURL,
+  deleteURL,
+  currentUserEqualsURLUser
+} = require('./helpers');
 
 const app = express();
 const PORT = 8080;
@@ -16,38 +25,44 @@ app.use(cookieSession({
   keys: ['Somewhat long string key'],
 }));
 
-// GET / POST methods
+// POST methods
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (!req.session.userID || req.session.userID !== urlDB[req.params.shortURL].userID) {
+  const sessionID = req.session.userID;
+
+  if (!currentUserEqualsURLUser(sessionID, urlDB[req.params.shortURL].userID)) {
     res.redirect(403, "/");
     return;
   }
 
-  delete urlDB[req.params.shortURL];
+  deleteURL(urlDB, req.params.shortURL);
   res.redirect("/urls/");
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  if (!req.session.userID || req.session.userID !== urlDB[req.params.shortURL].userID) {
+  const sessionID = req.session.userID;
+  const shortURL = req.params.shortURL;
+  const longURL = getValidURL(req.body.longURL);
+
+  if (!currentUserEqualsURLUser(sessionID, urlDB[shortURL].userID)) {
     res.redirect(403, "/");
     return;
   }
 
   if (!req.body.longURL) {
-    res.redirect(400, `/urls/${req.params.shortURL}`);
+    res.redirect(400, `/urls/${shortURL}`);
     return;
   }
 
-  const longURL = getValidURL(req.body.longURL);
-  urlDB[req.body.shortURL].longURL = longURL;
+  urlDB[shortURL].longURL = longURL;
   const templateVars = {
-    shortURL: req.body.shortURL,
-    longURL: urlDB[req.body.shortURL].longURL,
-    user: usersDB[req.session.userID],
-    visits: urlDB[req.params.shortURL].visits,
-    uniqueVisits: Object.keys(urlDB[req.params.shortURL].visitorIPs).length,
-    visitRecords: urlDB[req.params.shortURL].visitorIPs
+    shortURL,
+    longURL: longURL,
+    user: usersDB[sessionID],
+    visits: urlDB[shortURL].visits,
+    uniqueVisits: Object.keys(urlDB[shortURL].visitorIPs).length,
+    visitRecords: urlDB[shortURL].visitorIPs
   };
+  
   res.render("urls_show", templateVars);
 });
 

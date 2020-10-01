@@ -41,8 +41,21 @@ const getValidURL = url => {
   return newUrl;
 };
 
-/* const currentUserMatch = (currentUserID, requestedUserID) => {
+const getUserIDOfURL = (urlDB, shortURL) => urlDB[shortURL].userID;
 
-}); */
+const deleteURL = (urlDB, shortURL) => {
+  delete urlDB[shortURL];
+};
 
-module.exports = { generateRandomString, getUserByEmail, urlsForUser, getValidURL, getVisitorIP };
+const currentUserEqualsURLUser = (currentUser, urlUser) => currentUser && currentUser === urlUser;
+
+module.exports = {
+  generateRandomString,
+  getUserByEmail,
+  urlsForUser,
+  getValidURL,
+  getVisitorIP,
+  getUserIDOfURL,
+  deleteURL,
+  currentUserEqualsURLUser
+};
