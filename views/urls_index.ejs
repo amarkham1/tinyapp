@@ -10,8 +10,8 @@
   <main style="margin: 1em;">
     <% if(user) { %>
       <h3 class="ml-4 mb-3">My URLs</h3>
-      <table class="table">
-        <thead>
+      <table class="table table-striped">
+        <thead class="bg-secondary text-light">
           <tr>
             <th scope="col">Short URL</th>
             <th scope="col">Long URL</th>
@@ -22,7 +22,7 @@
             <th scope="col">Delete</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="border-bottom border-secondary-60">
           <% for (const url in urls) { %>
             <tr>
               <td><%= url %></td>

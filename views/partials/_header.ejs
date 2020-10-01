@@ -1,10 +1,10 @@
 <header>
-  <nav class="navbar navbar-expand-md navbar-dark bg-success">
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark">
     <a class="navbar-brand" href="/urls">TinyApp</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse text-nowrap" id="navbarNavAltMarkup">
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <% if(user) { %>
@@ -14,7 +14,7 @@
       <div class="navbar-nav container d-flex justify-content-end">
         <% if(user) { %>
           <form action="/logout" method="POST" class="form-inline">
-            <div class="text-center mr-3">
+            <div class="text-center mr-3 nav-item text-light">
               Logged In As: <b><%= user.email %></b>
             </div>
             <button type="submit" class="btn btn-light">Logout</button>

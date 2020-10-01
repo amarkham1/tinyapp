@@ -2,36 +2,19 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const { urlDB, usersDB } = require('./db');
 const { generateRandomString, getUserByEmail, urlsForUser, getValidURL, getVisitorIP } = require('./helpers');
 
 const app = express();
 const PORT = 8080;
+const salt = bcrypt.genSaltSync(10);
+
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
   keys: ['Somewhat long string key'],
 }));
-const salt = bcrypt.genSaltSync(10);
-
-// "databases"
-const urlDB = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID", date: new Date(), visits: 0, visitorIPs: {} },
-  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID", date: new Date(), visits: 0, visitorIPs: {} }
-};
-
-const usersDB = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: bcrypt.hashSync("purple-monkey", salt)
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: bcrypt.hashSync("dishwasher-funk", salt)
-  }
-};
 
 // GET / POST methods
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -204,3 +187,5 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
+
+module.exports = { salt }

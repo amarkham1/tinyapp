@@ -41,4 +41,8 @@ const getValidURL = url => {
   return newUrl;
 };
 
+/* const currentUserMatch = (currentUserID, requestedUserID) => {
+
+}); */
+
 module.exports = { generateRandomString, getUserByEmail, urlsForUser, getValidURL, getVisitorIP };
