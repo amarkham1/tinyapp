@@ -20,7 +20,8 @@
             None
           <% } else { %>
             <% for (const [id, visitRecord] of Object.entries(visitRecords)) { %>
-              <p class="card-text"><%= id %>: <%= visitRecord.timestamp %></p>
+              <% let [hour, minute, second] = visitRecord.timestamp.toLocaleTimeString().slice(0,7).split(":"); %>
+              <p class="card-text"><%= id %>: <%= `${visitRecord.timestamp.toDateString()}` %></p>
             <% } %>
           <% } %>
       </div>

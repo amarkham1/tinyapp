@@ -8,7 +8,7 @@ const getUserByEmail = (email, userDB) => {
       return userDB[user];
     }
   }
-}
+};
 
 const getVisitorIP = (ip, shortURL, urlDB) => {
   for (const [id, record] of Object.entries(urlDB[shortURL].visitorIPs)) {
@@ -16,7 +16,7 @@ const getVisitorIP = (ip, shortURL, urlDB) => {
       return id;
     }
   }
-}
+};
 
 const urlsForUser = (urlDB, userID) => {
   let result = {};
@@ -26,15 +26,15 @@ const urlsForUser = (urlDB, userID) => {
     }
   }
   return result;
-}
+};
 
 const getValidURL = url => {
   let newUrl = url.trim().replace(/\s/g, "");
 
-  if(/^(:\/\/)/.test(newUrl)){
+  if (/^(:\/\/)/.test(newUrl)) {
     return `http${newUrl}`;
   }
-  if(!/^(f|ht)tps?:\/\//i.test(newUrl)){
+  if (!/^(f|ht)tps?:\/\//i.test(newUrl)) {
     return `http://${newUrl}`;
   }
 
