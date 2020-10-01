@@ -24,7 +24,6 @@ app.use(cookieSession({
   keys: ['Somewhat long string key'],
 }));
 
-// POST methods
 app.post("/urls/:shortURL/delete", (req, res) => {
   const sessionID = req.session.userID;
   const shortURL = req.params.shortURL;
@@ -145,6 +144,7 @@ app.get("/u/:shortURL", (req, res) => {
     return;
   }
 
+  // adds a new ip into urlDB if the current ip isn't already in there
   const ip = req.connection.remoteAddress;
   if (!getVisitorIP(urlDB, ip, shortURL)) {
     const visitID = generateRandomString();
@@ -191,7 +191,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  
+
   if (req.session.userID || !email || !password || getUserByEmail(usersDB, email)) {
     res.redirect(400, "/register");
     return;
