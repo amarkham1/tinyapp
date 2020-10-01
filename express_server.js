@@ -9,7 +9,6 @@ const {
   urlsForUser,
   getValidURL,
   getVisitorIP,
-  getUserIDOfURL,
   deleteURL,
   currentUserEqualsURLUser
 } = require('./helpers');
@@ -28,8 +27,14 @@ app.use(cookieSession({
 // POST methods
 app.post("/urls/:shortURL/delete", (req, res) => {
   const sessionID = req.session.userID;
+  const shortURL = req.params.shortURL;
+  const shortURLExists = urlDB[shortURL];
+  
+  if (!shortURLExists) {
+    res.redirect(400, "/")
+  }
 
-  if (!currentUserEqualsURLUser(sessionID, urlDB[req.params.shortURL].userID)) {
+  if (!currentUserEqualsURLUser(sessionID, urlDB[shortURL].userID)) {
     res.redirect(403, "/");
     return;
   }
@@ -48,7 +53,7 @@ app.post("/urls/:shortURL", (req, res) => {
     return;
   }
 
-  if (!req.body.longURL) {
+  if (!longURL) {
     res.redirect(400, `/urls/${shortURL}`);
     return;
   }
@@ -103,6 +108,10 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const sessionID = req.session.userID;
+  if (!sessionID) {
+    res.redirect(400, "/login");
+    return;
+  }
   const userURLs = urlsForUser(urlDB, sessionID);
   const templateVars = { urls: userURLs, user: usersDB[sessionID]};
   res.render("urls_index", templateVars);
@@ -130,11 +139,6 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-
-  if (!req.session.userID) {
-    res.redirect(403, "/login");
-    return;
-  }
 
   if (!urlDB[shortURL]) {
     res.redirect(400, "/");
@@ -171,7 +175,9 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session.userID = null;
-  res.redirect("/urls");
+
+  // Note: specs say to redirect to /urls which would throw error because they're not logged in. changed to /login instead
+  res.redirect("/login");
 });
 
 app.get("/register", (req, res) => {
@@ -183,18 +189,17 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const sessionID = req.session.userID;
   const email = req.body.email;
   const password = req.body.password;
-
-  if (sessionID || !email || !password || getUserByEmail(usersDB, email)) {
+  
+  if (req.session.userID || !email || !password || getUserByEmail(usersDB, email)) {
     res.redirect(400, "/register");
     return;
   }
 
   const id = generateRandomString();
   usersDB[id] = { id, email, password: bcrypt.hashSync(password, salt) };
-  sessionID = id;
+  req.session.userID = id;
   res.redirect("/urls");
 });
 
@@ -210,4 +215,4 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
 
-module.exports = { salt }
+module.exports = { salt };
