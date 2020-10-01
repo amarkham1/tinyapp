@@ -31,7 +31,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURLExists = urlDB[shortURL];
   
   if (!shortURLExists) {
-    res.redirect(400, "/")
+    res.redirect(400, "/");
   }
 
   if (!currentUserEqualsURLUser(sessionID, urlDB[shortURL].userID)) {
