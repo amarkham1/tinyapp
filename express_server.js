@@ -62,56 +62,56 @@ app.post("/urls/:shortURL", (req, res) => {
     uniqueVisits: Object.keys(urlDB[shortURL].visitorIPs).length,
     visitRecords: urlDB[shortURL].visitorIPs
   };
-  
+
   res.render("urls_show", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   const user = usersDB[req.session.userID];
+
   if (!user) {
     res.redirect("/login");
     return;
   }
+
   const templateVars = { user };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  if (!urlDB[req.params.shortURL]) {
-    res.redirect(400, "/urls");
-    return;
-  }
+  const sessionID = req.session.userID;
+  const shortURL = req.params.shortURL;
 
-  if (!req.session.userID) {
-    res.redirect(403, "/login");
-    return;
-  }
-  
-  if (req.session.userID !== urlDB[req.params.shortURL].userID) {
-    res.redirect(403, "/urls");
+  // takes user to /login if not logged in or their /urls page if they are
+  if (!currentUserEqualsURLUser(sessionID, urlDB[shortURL].userID)) {
+    res.redirect(403, "/");
     return;
   }
 
   const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDB[req.params.shortURL].longURL,
-    user: usersDB[req.session.userID],
-    visits: urlDB[req.params.shortURL].visits,
-    uniqueVisits: Object.keys(urlDB[req.params.shortURL].visitorIPs).length,
-    visitRecords: urlDB[req.params.shortURL].visitorIPs
+    shortURL,
+    longURL: urlDB[shortURL].longURL,
+    user: usersDB[sessionID],
+    visits: urlDB[shortURL].visits,
+    uniqueVisits: Object.keys(urlDB[shortURL].visitorIPs).length,
+    visitRecords: urlDB[shortURL].visitorIPs
   };
+
   res.render("urls_show", templateVars);
 });
 
 
 app.get("/urls", (req, res) => {
-  const userURLs = urlsForUser(urlDB, req.session.userID);
-  const templateVars = { urls: userURLs, user: usersDB[req.session.userID]};
+  const sessionID = req.session.userID;
+  const userURLs = urlsForUser(urlDB, sessionID);
+  const templateVars = { urls: userURLs, user: usersDB[sessionID]};
   res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
-  if (!req.session.userID) {
+  const sessionID = req.session.userID;
+
+  if (!sessionID) {
     res.redirect(403, "/login");
     return;
   }
@@ -119,32 +119,36 @@ app.post("/urls", (req, res) => {
   let newShortURL = generateRandomString();
   urlDB[newShortURL] = {
     longURL: getValidURL(req.body.longURL),
-    userID: req.session.userID,
+    userID: sessionID,
     date: new Date(),
     visits: 0,
     visitorIPs: { }
   };
+
   res.redirect(`/urls/${newShortURL}`);
 });
 
 app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+
   if (!req.session.userID) {
     res.redirect(403, "/login");
     return;
   }
 
-  if (!urlDB[req.params.shortURL]) {
+  if (!urlDB[shortURL]) {
     res.redirect(400, "/");
     return;
   }
 
-  if (!getVisitorIP(req.connection.remoteAddress, req.params.shortURL, urlDB)) {
+  const ip = req.connection.remoteAddress;
+  if (!getVisitorIP(urlDB, ip, shortURL)) {
     const visitID = generateRandomString();
-    urlDB[req.params.shortURL].visitorIPs[visitID] = { ip: req.connection.remoteAddress, timestamp: new Date() };
+    urlDB[shortURL].visitorIPs[visitID] = { ip, timestamp: new Date() };
   }
 
-  urlDB[req.params.shortURL].visits++;
-  const longURL = urlDB[req.params.shortURL].longURL;
+  urlDB[shortURL].visits++;
+  const longURL = urlDB[shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -156,8 +160,7 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const user = getUserByEmail(req.body.email, usersDB);
-  console.log(user);
+  const user = getUserByEmail(usersDB, req.body.email);
   if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
     res.redirect(403, "/login");
     return;
@@ -180,14 +183,18 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  if (!req.body.email || !req.body.password || getUserByEmail(usersDB, req.body.email)) {
+  const sessionID = req.session.userID;
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (sessionID || !email || !password || getUserByEmail(usersDB, email)) {
     res.redirect(400, "/register");
     return;
   }
 
   const id = generateRandomString();
-  usersDB[id] = { id, email: req.body.email, password: bcrypt.hashSync(req.body.password, salt) };
-  req.session.userID = id;
+  usersDB[id] = { id, email, password: bcrypt.hashSync(password, salt) };
+  sessionID = id;
   res.redirect("/urls");
 });
 

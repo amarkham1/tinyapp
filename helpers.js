@@ -2,7 +2,7 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2,8);
 }
 
-const getUserByEmail = (email, userDB) => {
+const getUserByEmail = (userDB, email) => {
   for (const user in userDB) {
     if (userDB[user].email === email) {
       return userDB[user];
@@ -10,7 +10,7 @@ const getUserByEmail = (email, userDB) => {
   }
 };
 
-const getVisitorIP = (ip, shortURL, urlDB) => {
+const getVisitorIP = (urlDB, ip, shortURL) => {
   for (const [id, record] of Object.entries(urlDB[shortURL].visitorIPs)) {
     if (ip === record.ip) {
       return id;
