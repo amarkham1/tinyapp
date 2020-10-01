@@ -24,13 +24,13 @@ const testURLs = {
 
 describe('getUserByEmail', function() {
   it('should return a user with valid email', function() {
-    const user = getUserByEmail("user@example.com", testUsers);
+    const user = getUserByEmail(testUsers, "user@example.com");
     const expectedOutput = "userRandomID";
     assert.equal(user.id, expectedOutput);
   });
 
   it('should return undefined with email not in database', function() {
-    const user = getUserByEmail("fake@example.com", testUsers);
+    const user = getUserByEmail(testUsers, "fake@example.com");
     const expectedOutput = undefined;
     assert.strictEqual(user, expectedOutput);
   });
@@ -65,10 +65,10 @@ describe('getValidURL', function() {
 
 describe('getVisitorIP', function() {
   it('should return ip if it exists', function() {
-    assert.strictEqual(getVisitorIP('143.19.29.1', 'b2xVn2', testURLs), '2');
+    assert.strictEqual(getVisitorIP(testURLs, '143.19.29.1', 'b2xVn2'), '2');
   });
 
   it('should return undefined if an ip doesnt exist', function() {
-    assert.strictEqual(getVisitorIP('0.19.29.1', 'b2xVn2', testURLs), undefined);
+    assert.strictEqual(getVisitorIP(testURLs, '0.19.29.1', 'b2xVn2'), undefined);
   });
 });
