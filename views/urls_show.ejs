@@ -13,6 +13,16 @@
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+        <p class="card-text">Total Visits: <%= visits %></p>
+        <p class="card-text">Unique Visits: <%= uniqueVisits %></p>
+        <p class="card-text">Unique Visit Records:
+          <% if (uniqueVisits === 0) { %>
+            None
+          <% } else { %>
+            <% for (const [id, visitRecord] of Object.entries(visitRecords)) { %>
+              <p class="card-text"><%= id %>: <%= visitRecord.timestamp %></p>
+            <% } %>
+          <% } %>
       </div>
       <div class="card-body border-top bg-light">
         <h3>Edit</h3>

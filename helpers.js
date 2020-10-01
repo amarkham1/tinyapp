@@ -10,6 +10,14 @@ const getUserByEmail = (email, userDB) => {
   }
 }
 
+const getVisitorIP = (ip, shortURL, urlDB) => {
+  for (const [id, record] of Object.entries(urlDB[shortURL].visitorIPs)) {
+    if (ip === record.ip) {
+      return id;
+    }
+  }
+}
+
 const urlsForUser = (urlDB, userID) => {
   let result = {};
   for (const [record, data] of Object.entries(urlDB)) {
@@ -33,4 +41,4 @@ const getValidURL = url => {
   return newUrl;
 };
 
-module.exports = { generateRandomString, getUserByEmail, urlsForUser, getValidURL };
+module.exports = { generateRandomString, getUserByEmail, urlsForUser, getValidURL, getVisitorIP };

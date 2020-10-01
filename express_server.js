@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
-const { generateRandomString, getUserByEmail, urlsForUser, getValidURL } = require('./helpers');
+const { generateRandomString, getUserByEmail, urlsForUser, getValidURL, getVisitorIP } = require('./helpers');
 
 const app = express();
 const PORT = 8080;
@@ -16,8 +16,8 @@ const salt = bcrypt.genSaltSync(10);
 
 // "databases"
 const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID", date: new Date(), visits: 0, visitorIPs: [] },
-  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID", date: new Date(), visits: 0, visitorIPs: [] }
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID", date: new Date(), visits: 0, visitorIPs: {} },
+  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID", date: new Date(), visits: 0, visitorIPs: {} }
 };
 
 const usersDatabase = {
@@ -57,7 +57,14 @@ app.post("/urls/:shortURL", (req, res) => {
 
   const longURL = getValidURL(req.body.longURL);
   urlDatabase[req.body.shortURL].longURL = longURL;
-  const templateVars = { shortURL: req.body.shortURL, longURL: urlDatabase[req.body.shortURL].longURL, user: usersDatabase[req.session.usd_id]};
+  const templateVars = {
+    shortURL: req.body.shortURL,
+    longURL: urlDatabase[req.body.shortURL].longURL,
+    user: usersDatabase[req.session.user_id],
+    visits: urlDatabase[req.params.shortURL].visits,
+    uniqueVisits: Object.keys(urlDatabase[req.params.shortURL].visitorIPs).length,
+    visitRecords: urlDatabase[req.params.shortURL].visitorIPs
+  };
   res.render("urls_show", templateVars);
 });
 
@@ -87,7 +94,14 @@ app.get("/urls/:shortURL", (req, res) => {
     return ;
   }
 
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: usersDatabase[req.session.usd_id]};
+  const templateVars = { 
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    user: usersDatabase[req.session.user_id],
+    visits: urlDatabase[req.params.shortURL].visits,
+    uniqueVisits: Object.keys(urlDatabase[req.params.shortURL].visitorIPs).length,
+    visitRecords: urlDatabase[req.params.shortURL].visitorIPs
+  };
   res.render("urls_show", templateVars);
 });
 
@@ -110,7 +124,7 @@ app.post("/urls", (req, res) => {
     userID: req.session.user_id,
     date: new Date(),
     visits: 0,
-    visitorIPs: []
+    visitorIPs: { }
   };
   res.redirect(`/urls/${newShortURL}`);
 })
@@ -126,10 +140,11 @@ app.get("/u/:shortURL", (req, res) => {
     return ;
   }
 
-  const visitorIPs = urlDatabase[req.params.shortURL].visitorIPs;
-  if (visitorIPs.indexOf(req.connection.remoteAddress) < 0) {
-    visitorIPs.push(req.connection.remoteAddress);
+  if (!getVisitorIP(req.connection.remoteAddress, req.params.shortURL, urlDatabase)) {
+    const visitID = generateRandomString();
+    urlDatabase[req.params.shortURL].visitorIPs[visitID] = { ip: req.connection.remoteAddress, timestamp: new Date() };
   }
+
   urlDatabase[req.params.shortURL].visits++;
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
@@ -143,7 +158,8 @@ app.get("/login", (req, res) => {
 })
 
 app.post("/login", (req, res) => {
-  const user = getUserByEmail(usersDatabase, req.body.email);
+  const user = getUserByEmail(req.body.email, usersDatabase);
+  console.log(user);
   if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
     res.redirect(403, "/login");
     return ;
