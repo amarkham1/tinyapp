@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const methodOverride = require('method-override');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const { urlDB, usersDB } = require('./db');
@@ -23,6 +24,7 @@ app.use(cookieSession({
   name: 'session',
   keys: ['Somewhat long string key'],
 }));
+app.use(methodOverride('X-HTTP-Method-Override'));
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const sessionID = req.session.userID;
